@@ -27,6 +27,7 @@ async function startCamera(deviceId) {
   video.srcObject = stream;
   video.onloadedmetadata = () => {
     video.play();
+    console.log("scan");
     scan();
   };
 }
