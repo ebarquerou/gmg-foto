@@ -1,29 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Scanner</title>
-    <style>
-        #videoElement {
-            width: 100%;
-            height: auto;
-        }
-        #captureButton {
-            display: none;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paper Scanner</title>
 </head>
 <body>
-    <h1>Document Scanner</h1>
-    <select id="cameraList"></select>
-    <video id="videoElement" autoplay></video>
-    <button id="captureButton">Capture Image</button>
-    <canvas id="canvasElement" style="display:none;"></canvas>
-    <img id="capturedImage" alt="Captured Image" style="width: 100%; height: auto;"/>
-    <script src="https://docs.opencv.org/4.7.0/opencv.js" async></script>
-    <!-- warning: loading OpenCV can take some time. Load asynchronously -->
-    <script src="https://cdn.jsdelivr.net/gh/ColonelParrot/jscanify@master/src/jscanify.min.js"></script>  
-    <script src="https://red-coast-0c642320f.5.azurestaticapps.net/app.js"></script>
+  <h1>Paper Scanner</h1>
+  <label for="cameraSelect">Select Camera:</label>
+  <select id="cameraSelect"></select>
+  <button id="startScan">Start Scan</button>
+  <div>
+    <video id="video" width="640" height="480" autoplay></video>
+    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+    <canvas id="result" width="640" height="480"></canvas>
+  </div>
+  <button id="capture">Capture Image</button>
+  <script src="https://docs.opencv.org/4.7.0/opencv.js" async></script>
+  <!-- warning: loading OpenCV can take some time. Load asynchronously -->
+<script src="https://cdn.jsdelivr.net/gh/ColonelParrot/jscanify@master/src/jscanify.min.js"></script>  
+  <script src="https://red-coast-0c642320f.5.azurestaticapps.net/app.js"></script>
 </body>
 </html>
