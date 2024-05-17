@@ -1,58 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document Scanner</title>
-  <script src="https://docs.opencv.org/4.7.0/opencv.js" async></script>
-  <!-- warning: loading OpenCV can take some time. Load asynchronously -->
-  <script src="https://cdn.jsdelivr.net/gh/ColonelParrot/jscanify@master/src/jscanify.min.js"></script>  
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escanear Documento</title>
+    <script src="https://docs.opencv.org/4.7.0/opencv.js" async></script>
+    <!-- warning: loading OpenCV can take some time. Load asynchronously -->
+    <script src="https://cdn.jsdelivr.net/gh/ColonelParrot/jscanify@master/src/jscanify.min.js"></script>  
   </head>
 <body>
-  <div class="home">
     <h1>Escanear Documento</h1>
+    <select id="cameraList"></select>
     <video id="video" width="320" height="240" autoplay></video>
     <button id="capture">Escanear</button>
     <canvas id="canvas" style="display:none;"></canvas>
     <img id="output" alt="Escaneo" />
 
+    <script>
+        let currentStream = null;
 
-    <canvas id="result"></canvas>
-    <!-- highlighted video -->
-</body>
-<script>
-    // Obtener acceso a la cámara y listar opciones
-    async function getCameraOptions() {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(device => device.kind === 'videoinput');
-        return videoDevices;
-    }
-
-    // Configurar la cámara y el escaneo
-    async function setupCamera() {
-        const video = document.getElementById('video');
-        const options = await getCameraOptions();
-        if (options.length === 0) {
-            alert('No se encontraron cámaras.');
-            return;
+        // Obtener acceso a la cámara y listar opciones
+        async function getCameraOptions() {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+            return videoDevices;
         }
 
-        const constraints = {
-            video: {
-                deviceId: options[0].deviceId
+        // Detener el stream actual
+        function stopCurrentStream() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
             }
-        };
+        }
 
-        navigator.mediaDevices.getUserMedia(constraints)
-            .then(stream => {
+        // Configurar la cámara seleccionada
+        async function setupCamera(deviceId) {
+            stopCurrentStream();
+
+            const constraints = {
+                video: {
+                    deviceId: deviceId
+                }
+            };
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                currentStream = stream;
+                const video = document.getElementById('video');
                 video.srcObject = stream;
-            })
-            .catch(err => {
+            } catch (err) {
                 console.error('Error al acceder a la cámara:', err);
+            }
+        }
+
+        // Inicializar la lista de cámaras
+        async function initCameraList() {
+            const cameraList = document.getElementById('cameraList');
+            const options = await getCameraOptions();
+            cameraList.innerHTML = '';
+
+            options.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                option.text = device.label || `Cámara ${index + 1}`;
+                cameraList.appendChild(option);
             });
-    }    
-    
-    document.getElementById('capture').addEventListener('click', () => {
+
+            if (options.length > 0) {
+                setupCamera(options[0].deviceId);
+            }
+        }
+
+        document.getElementById('cameraList').addEventListener('change', (event) => {
+            setupCamera(event.target.value);
+        });
+
+        document.getElementById('capture').addEventListener('click', () => {
             const video = document.getElementById('video');
             const canvas = document.getElementById('canvas');
             const context = canvas.getContext('2d');
@@ -71,34 +94,9 @@
                 console.error('Error procesando la imagen:', error);
             });
         });
-    
-    window.addEventListener('load', setupCamera);
 
-
-
-  // document.getElementById('startButton').addEventListener('click', () => {
-  //   const scanner = new jscanify();
-  //   const video = document.getElementById('video');
-  //   const canvas = document.getElementById('canvas');
-  //   const result = document.getElementById('result');
-  //   const canvasCtx = canvas.getContext('2d');
-  //   const resultCtx = result.getContext('2d');
-
-  //   navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-  //     video.srcObject = stream;
-  //     video.onloadedmetadata = () => {
-  //       video.play();
-
-  //       setInterval(() => {
-  //         canvasCtx.drawImage(video, 0, 0);
-  //         const resultCanvas = scanner.highlightPaper(canvas);
-  //         resultCtx.drawImage(resultCanvas, 0, 0);
-  //       }, 10);
-  //     };
-  //   }).catch((err) => {
-  //     console.error('Error accessing media devices.', err);
-  //   });
-  // });
-</script>
-
+        // Inicializar la lista de cámaras y configurar la primera cámara al cargar la página
+        window.addEventListener('load', initCameraList);
+    </script>
+</body>
 </html>
