@@ -4,9 +4,43 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document Scanner</title>
+  <script src="https://docs.opencv.org/4.7.0/opencv.js" async></script>
+  <!-- warning: loading OpenCV can take some time. Load asynchronously -->
+  <script src="https://cdn.jsdelivr.net/gh/ColonelParrot/jscanify@master/src/jscanify.min.js"></script>  
   </head>
 <body>
   <div class="home">
     <h2>Document Scanner Demo</h2>
+    <button id="startButton">Iniciar Captura</button>
+    <video id="video"></video> <canvas id="canvas"></canvas>
+    <!-- original video -->
+    <canvas id="result"></canvas>
+    <!-- highlighted video -->
 </body>
+<script>
+  document.getElementById('startButton').addEventListener('click', () => {
+    const scanner = new jscanify();
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const result = document.getElementById('result');
+    const canvasCtx = canvas.getContext('2d');
+    const resultCtx = result.getContext('2d');
+
+    navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+      video.srcObject = stream;
+      video.onloadedmetadata = () => {
+        video.play();
+
+        setInterval(() => {
+          canvasCtx.drawImage(video, 0, 0);
+          const resultCanvas = scanner.highlightPaper(canvas);
+          resultCtx.drawImage(resultCanvas, 0, 0);
+        }, 10);
+      };
+    }).catch((err) => {
+      console.error('Error accessing media devices.', err);
+    });
+  });
+</script>
+
 </html>
