@@ -10,37 +10,95 @@
   </head>
 <body>
   <div class="home">
-    <h2>Document Scanner Demo</h2>
-    <button id="startButton">Iniciar Captura</button>
-    <video id="video"></video> <canvas id="canvas"></canvas>
-    <!-- original video -->
+    <h1>Escanear Documento</h1>
+    <video id="video" width="320" height="240" autoplay></video>
+    <button id="capture">Escanear</button>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <img id="output" alt="Escaneo" />
+
+
     <canvas id="result"></canvas>
     <!-- highlighted video -->
 </body>
 <script>
-  document.getElementById('startButton').addEventListener('click', () => {
-    const scanner = new jscanify();
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const result = document.getElementById('result');
-    const canvasCtx = canvas.getContext('2d');
-    const resultCtx = result.getContext('2d');
+    // Obtener acceso a la cámara y listar opciones
+    async function getCameraOptions() {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        return videoDevices;
+    }
 
-    navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-      video.srcObject = stream;
-      video.onloadedmetadata = () => {
-        video.play();
+    // Configurar la cámara y el escaneo
+    async function setupCamera() {
+        const video = document.getElementById('video');
+        const options = await getCameraOptions();
+        if (options.length === 0) {
+            alert('No se encontraron cámaras.');
+            return;
+        }
 
-        setInterval(() => {
-          canvasCtx.drawImage(video, 0, 0);
-          const resultCanvas = scanner.highlightPaper(canvas);
-          resultCtx.drawImage(resultCanvas, 0, 0);
-        }, 10);
-      };
-    }).catch((err) => {
-      console.error('Error accessing media devices.', err);
-    });
-  });
+        const constraints = {
+            video: {
+                deviceId: options[0].deviceId
+            }
+        };
+
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error('Error al acceder a la cámara:', err);
+            });
+    }    
+    
+    document.getElementById('capture').addEventListener('click', () => {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const dataURL = canvas.toDataURL('image/png');
+
+            // Utilizar jscanify para procesar la imagen
+            const js = new jscanify.Jscanify();
+            js.processImage(dataURL).then(processedImage => {
+                document.getElementById('output').src = processedImage;
+            }).catch(error => {
+                console.error('Error procesando la imagen:', error);
+            });
+        });
+    
+    window.addEventListener('load', setupCamera);
+
+
+
+  // document.getElementById('startButton').addEventListener('click', () => {
+  //   const scanner = new jscanify();
+  //   const video = document.getElementById('video');
+  //   const canvas = document.getElementById('canvas');
+  //   const result = document.getElementById('result');
+  //   const canvasCtx = canvas.getContext('2d');
+  //   const resultCtx = result.getContext('2d');
+
+  //   navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+  //     video.srcObject = stream;
+  //     video.onloadedmetadata = () => {
+  //       video.play();
+
+  //       setInterval(() => {
+  //         canvasCtx.drawImage(video, 0, 0);
+  //         const resultCanvas = scanner.highlightPaper(canvas);
+  //         resultCtx.drawImage(resultCanvas, 0, 0);
+  //       }, 10);
+  //     };
+  //   }).catch((err) => {
+  //     console.error('Error accessing media devices.', err);
+  //   });
+  // });
 </script>
 
 </html>
